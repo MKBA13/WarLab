@@ -1,0 +1,38 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  gh-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+      - name: Build App
+        run: |
+          if [ -e yarn.lock ]; then
+          yarn install --immutable
+          yarn build
+          elif [ -e package-lock.json ]; then
+          npm ci --no-optional
+          npm run build
+          else
+          npm i --no-optional
+          npm run build
+          fi
+
+      - name: Deploy to GitHub Pages (in another repo)
+        uses: cpina/github-action-push-to-another-repository@main
+        #env:
+          #SSH_DEPLOY_KEY: {{ secrets.SSH_DEPLOY_KEY }}
+        with:
+          source-directory: 'dist'
+          destination-github-username: 'MKBA13'
+          destination-repository-name: 'MKBA13.github.io'
+          user-email: ba.workmail13@gmail.com
+          target-branch: gh-pages
